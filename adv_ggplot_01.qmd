@@ -1,7 +1,7 @@
 ---
 title: "Advanced visualization with ggplot2"
 subtitle: "Challenge 1"
-author: "YOUR NAME"
+author: "Phebe Chen"
 format: 
   html:
     self-contained: true
@@ -45,20 +45,70 @@ You will need to use reference pages and documentation to discover necessary too
 # Setup
 
 ```{r}
-# Code for loading packages and reading in data
+library(tidyverse)
+library(patchwork)
+weather <- read_csv("https://lmyint.github.io/212_spring_2024/data/sfo_weather.csv")
 ```
 
 
 
 # Visualization
 
-```{r}
-# Code for recreating the visualization
-# Use as many code chunks as you need to organize your work well
+```{r, warning=FALSE}
+first_days <- weather %>% 
+  filter(Day == 1, Month !=1)
+
+weather %>% 
+  mutate(Month = month.abb[as.numeric(Month)])
+
+record2 <- weather %>% 
+  filter(Record == TRUE)
+
+p1 <- ggplot(weather) +
+    geom_linerange(aes(x = dateInYear, ymin = RecordLow, ymax = RecordHigh), color = "#ECEBE3", linewidth = 1.5) +
+    geom_linerange(aes(x = dateInYear, ymin = NormalLow, ymax = NormalHigh), color = "#C8B8BA", linewidth = 1.5) +
+    geom_vline(data = first_days, mapping = aes(xintercept = dateInYear), lty = "dotted", color = "lightgray") +
+    geom_linerange(aes(x = dateInYear, ymin = Low, ymax = High), color = "#A90248", linewidth = 1.5) +
+    geom_point(data = record2, aes(x = dateInYear, y=RecordHigh), shape = 25, fill = "black") +
+    geom_text(aes(x = dateInYear, y=RecordHigh, label = RecordText), vjust = -2, size = 2) +
+    scale_x_continuous(
+      breaks = c(1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335),
+      labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+      expand=c(0,0)) +
+    scale_y_continuous(limits = c(-20, 120), breaks = c(0, 40, 80, 120)) +
+    theme_classic() +
+    labs(title = "SFO Weather in 2011", subtitle = "Temperature") +
+    theme(axis.ticks.x = element_blank(), axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.x = element_text(hjust = -.6), plot.title = element_text(hjust = .5, size = 8), plot.subtitle = element_text(face = "bold"), axis.line.x = element_blank())
+
+p1
 ```
 
+```{r}
+last_days <- weather %>% 
+  group_by(Month) %>%
+  filter(Day == max(Day)) 
 
+record <- weather %>% 
+  filter(RecordP == TRUE)
 
+p2 <- ggplot(weather) + 
+  geom_vline(data = first_days, mapping = aes(xintercept = dateInYear), color = "lightgray") +
+  geom_line(aes(x = dateInYear, y=CulmPrec), color = "#32a3d8") + 
+  geom_area(aes(x = dateInYear, y=CulmPrec), fill = "#ebeae2") +
+  geom_text(data = last_days, aes(x = dateInYear, y=CulmPrec, label=CulmPrec), size = 2.5, vjust = -0.1) +
+  geom_point(data = record, aes(x = dateInYear, y=CulmPrec), shape = 25, fill = "black") +
+  scale_x_continuous(expand=c(0,0)) + 
+  scale_y_continuous(expand=c(0,0), breaks=c(4,8), limits = c(-.1,8)) +
+  theme_classic() + 
+  labs(subtitle = "Precipitation") +
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank(), plot.subtitle = element_text(face = "bold"), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.line.x = element_blank())
+
+p2
+```
+
+```{r, warning= FALSE}
+p1 / p2
+```
 
 # AI usage
 
